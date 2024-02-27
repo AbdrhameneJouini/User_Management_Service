@@ -1,7 +1,10 @@
 package com.gjevents.usermanagementservice;
 
+import com.gjevents.usermanagementservice.configuration.SecurityConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import io.github.cdimascio.dotenv.Dotenv;
 
 import java.util.Objects;
@@ -20,6 +23,8 @@ public class UsermanagementserviceApplication {
 		System.setProperty("MAIL_PASSWORD", Objects.requireNonNull(dotenv.get("MAIL_PASSWORD")));
 
 		SpringApplication.run(UsermanagementserviceApplication.class, args);
+
+
 	}
 
 }
