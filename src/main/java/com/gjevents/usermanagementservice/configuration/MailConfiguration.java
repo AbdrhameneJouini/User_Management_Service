@@ -8,6 +8,7 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 
 import java.util.Properties;
 
+
 @Configuration
 public class MailConfiguration {
 
@@ -22,9 +23,6 @@ public class MailConfiguration {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost("smtp.gmail.com");
         mailSender.setPort(587);
-
-        System.out.println("MAIL_USERNAME: " + dotenv.get("MAIL_USERNAME"));
-        System.out.println("MAIL_PASSWORD: " + dotenv.get("MAIL_PASSWORD"));
 
         mailSender.setUsername(dotenv.get("MAIL_USERNAME"));
         mailSender.setPassword(dotenv.get("MAIL_PASSWORD"));
