@@ -1,6 +1,7 @@
 package com.gjevents.usermanagementservice.service;
 
 import com.gjevents.usermanagementservice.TestConfig;
+import com.gjevents.usermanagementservice.repository.AdminRepository;
 import com.gjevents.usermanagementservice.repository.UserRepository;
 import com.gjevents.usermanagementservice.model.User;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +25,9 @@ public class UserServiceTest {
     @MockBean
     private PasswordEncoder passwordEncoder;
 
+    @MockBean
+    private AdminRepository adminRepository;
+
     @Autowired
     private UserService userService;
 
@@ -32,6 +36,7 @@ public class UserServiceTest {
         String login = "Abdou48";
         String password = "58051050ABDOU";
         String encodedPassword = "$argon2id$v=19$m=65536,t=1,p=1$oWKq/U1fX/8GK3cex+3NvQ$WYapC5aab7GWuqr6do7TdMOh8VnHFc4ZlXSUjdJ8+Yo";
+        userService = new UserService(userRepository,adminRepository ,passwordEncoder);
 
         User user = new User();
         user.setLogin(login);
@@ -50,7 +55,8 @@ public class UserServiceTest {
         System.out.println("Actual result: " + result);
 
         assertTrue(result);
-        verify(userRepository, times(1)).findByLogin(login);
-        verify(passwordEncoder, times(1)).matches(password, encodedPassword);
+        verify(userRepository, times(2)).findByLogin(login);
+        verify(passwordEncoder, times(2)).matches(password, encodedPassword);
+
     }
 }
