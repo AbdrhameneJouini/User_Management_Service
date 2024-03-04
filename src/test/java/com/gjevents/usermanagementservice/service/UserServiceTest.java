@@ -2,6 +2,8 @@ package com.gjevents.usermanagementservice.service;
 
 import com.gjevents.usermanagementservice.TestConfig;
 import com.gjevents.usermanagementservice.repository.AdminRepository;
+import com.gjevents.usermanagementservice.repository.OrganizerRepository;
+import com.gjevents.usermanagementservice.repository.TokenRepository;
 import com.gjevents.usermanagementservice.repository.UserRepository;
 import com.gjevents.usermanagementservice.model.User;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,15 +30,22 @@ public class UserServiceTest {
     @MockBean
     private AdminRepository adminRepository;
 
+    @MockBean
+    private TokenRepository tokenRepository;
+    @MockBean
+    private OrganizerRepository organizerRepository;
+
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private MailSenderService mailSenderService;
     @Test
     public void testLogin() {
         String login = "Abdou48";
         String password = "58051050ABDOU";
         String encodedPassword = "$argon2id$v=19$m=65536,t=1,p=1$oWKq/U1fX/8GK3cex+3NvQ$WYapC5aab7GWuqr6do7TdMOh8VnHFc4ZlXSUjdJ8+Yo";
-        userService = new UserService(userRepository,adminRepository ,passwordEncoder);
+        userService = new UserService(userRepository, mailSenderService,organizerRepository,adminRepository ,passwordEncoder, tokenRepository);
 
         User user = new User();
         user.setLogin(login);

@@ -1,5 +1,6 @@
 package com.gjevents.usermanagementservice.controller;
 
+import com.gjevents.usermanagementservice.model.Organizer;
 import com.gjevents.usermanagementservice.model.User;
 import com.gjevents.usermanagementservice.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,7 +32,43 @@ public class UserController {
         this.userService = userService;
     }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        boolean result = userService.forgotPassword(request.getEmail());
+        if (result) {
+            return ResponseEntity.ok("Password reset email sent.");
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email does not exist.");
+        }
+    }
+    @PostMapping("/update-user")
+    public ResponseEntity<String> modifyAccount(@Valid @RequestBody User user) {
+        try {
+            userService.updateUser(user);
+            return ResponseEntity.ok("Account has been modified.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
 
+    @PostMapping("/update-organizer")
+    public ResponseEntity<String> modifyAccount(@Valid @RequestBody Organizer organizer) {
+        try {
+            userService.updateOrganizer(organizer);
+            return ResponseEntity.ok("Account has been modified.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@Valid @RequestBody PasswordResetRequest passwordResetRequest) {
+        boolean result = userService.resetPassword(passwordResetRequest);
+        if (result) {
+            return ResponseEntity.ok("Password has been reset.");
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired token.");
+        }
+    }
     @GetMapping("/is-logged-in")
     public ResponseEntity<String> isLoggedIn(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
@@ -59,7 +96,7 @@ public class UserController {
             userResponse.setTempUserId(null);
             sessionCookie.setMaxAge(24 * 60 * 60); // 1 day
             sessionCookie.setHttpOnly(true);
-            sessionCookie.setSecure(true); // Set this to true if your site is served over HTTPS
+            sessionCookie.setSecure(true);
             sessionCookie.setPath("/");
             response.addCookie(sessionCookie);
 
