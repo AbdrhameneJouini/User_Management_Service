@@ -8,12 +8,12 @@ import jakarta.validation.constraints.Size;
 public class UserLoginRequest {
 
     @NotBlank(message = "Login is mandatory")
-    @Size(min = 3, max = 50, message = "Login must be between 3 and 50 characters")
-    private String login;
+    @Size(min = 3, message = "Login must be between 3 and 20 characters")
+    private String login = "";
 
     @NotBlank(message = "Password is mandatory")
     @Size(min = 8, message = "Password must be at least 8 characters")
-    private String password;
+    private String password = "";
 
     public String getLogin() {
         return login;
