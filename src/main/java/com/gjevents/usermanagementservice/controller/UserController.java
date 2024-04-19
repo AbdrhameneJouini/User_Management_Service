@@ -1,5 +1,6 @@
 package com.gjevents.usermanagementservice.controller;
 
+import com.gjevents.usermanagementservice.model.Administrator;
 import com.gjevents.usermanagementservice.model.Organizer;
 import com.gjevents.usermanagementservice.model.User;
 import com.gjevents.usermanagementservice.service.UserService;
@@ -80,19 +81,29 @@ public class UserController {
                 }
             }
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User is not logged in");
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body("User is not logged in");
     }
 
     @PostMapping("/login")
     public ResponseEntity<UserLoginResponse> login(@Valid @RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request, HttpServletResponse response) {
+        System.out.println("Login request received");
         UserLoginResponse userResponse = userService.getUserLoginResponse(userLoginRequest.getLogin(), userLoginRequest.getPassword());
+
         if (userResponse != null) {
+            System.out.println("User found");
 
-            HttpSession session = request.getSession(true);
-            System.out.println("Session ID when created: " + session.getId());
-            session.setAttribute("userId", userResponse.getTempUserId());
-            Cookie sessionCookie = new Cookie("JSESSIONID", session.getId());
+            // Invalidate the old session if exists
+            HttpSession oldSession = request.getSession(false);
+            if (oldSession != null) {
+                oldSession.invalidate();
+            }
 
+            // Create a new session
+            HttpSession newSession = request.getSession(true);
+            System.out.println("Session ID when created: " + newSession.getId());
+            newSession.setAttribute("userId", userResponse.getTempUserId());
+
+            Cookie sessionCookie = new Cookie("JSESSIONID", newSession.getId());
             userResponse.setTempUserId(null);
             sessionCookie.setMaxAge(24 * 60 * 60); // 1 day
             sessionCookie.setHttpOnly(true);
@@ -103,13 +114,13 @@ public class UserController {
             userResponse.setResponseState("success");
             return ResponseEntity.ok(userResponse);
         } else {
+            System.out.println("User not found");
             userResponse = new UserLoginResponse();
             userResponse.setResponseState("Incorrect Login or Password");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(userResponse);
         }
     }
-
-    @GetMapping("/user-data")
+ /*   @GetMapping("/user-data")
     public ResponseEntity<User> getUserData(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
@@ -135,7 +146,44 @@ public class UserController {
             }
         }
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(null);
+    }*/
+
+
+    @GetMapping("/user-data")
+    public ResponseEntity<Map<String, Object>> getUserData(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals("JSESSIONID")) {
+                    System.out.println("JSESSIONID cookie value: " + cookie.getValue());
+                    HttpSession session = request.getSession(false);
+                    if (session != null) {
+                        System.out.println("Session ID when retrieved: " + session.getId());
+                        Long userId = (Long) session.getAttribute("userId");
+                        if (userId != null) {
+                            User user = userService.getUserById(userId);
+                            if (user != null) {
+                                Map<String, Object> response = new HashMap<>();
+                                response.put("user", user);
+                                if (user instanceof Organizer) {
+                                    response.put("role", "Organizer");
+                                }  else {
+                                    response.put("role", "User");
+                                }
+                                return ResponseEntity.ok(response);
+                            } else {
+                                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+                            }
+                        }
+                    } else {
+                        System.out.println("Session is null");
+                    }
+                }
+            }
+        }
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(null);
     }
+
     @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
         HttpSession session = request.getSession(false);
