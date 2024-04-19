@@ -1,3 +1,4 @@
+/*
 package com.gjevents.usermanagementservice.model;
 
 import jakarta.persistence.*;
@@ -97,4 +98,4 @@ public class SpringSession {
     public void setSpringSessionAttributes(Set<SpringSessionAttributes> springSessionAttributes) {
         this.springSessionAttributes = springSessionAttributes;
     }
-}
+}*/

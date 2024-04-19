@@ -66,6 +66,7 @@ public class UserService {
     }
 
     public UserLoginResponse getUserLoginResponse(String login, String password) {
+        System.out.println("login: " + login + " password: " + password);
         boolean isSuccessful = login(login, password);
         if (isSuccessful) {
             User user = getUserData(login);
