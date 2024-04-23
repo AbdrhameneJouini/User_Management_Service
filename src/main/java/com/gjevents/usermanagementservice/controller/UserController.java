@@ -2,7 +2,9 @@ package com.gjevents.usermanagementservice.controller;
 
 import com.gjevents.usermanagementservice.model.Administrator;
 import com.gjevents.usermanagementservice.model.Organizer;
+import com.gjevents.usermanagementservice.model.Session;
 import com.gjevents.usermanagementservice.model.User;
+import com.gjevents.usermanagementservice.service.SessionService;
 import com.gjevents.usermanagementservice.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,15 +14,18 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-
+import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import org.springframework.web.bind.annotation.*;
 
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/users")
@@ -28,9 +33,14 @@ public class UserController {
 
     private final UserService userService;
 
+    private final SessionService sessionService;
+
+
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, SessionService sessionService){
+
         this.userService = userService;
+        this.sessionService = sessionService;
     }
 
     @PostMapping("/forgot-password")
@@ -61,6 +71,10 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
+
+
+
+
     @PostMapping("/reset-password")
     public ResponseEntity<String> resetPassword(@Valid @RequestBody PasswordResetRequest passwordResetRequest) {
         boolean result = userService.resetPassword(passwordResetRequest);
@@ -76,13 +90,18 @@ public class UserController {
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if (cookie.getName().equals("JSESSIONID")) {
-
-                    return ResponseEntity.ok("User is logged in");
+                    System.out.println("User is Logged in");
+                        return ResponseEntity.ok("User is logged in");
                 }
             }
         }
+        System.out.println("User is not Logged in");
         return ResponseEntity.status(HttpStatus.ACCEPTED).body("User is not logged in");
     }
+
+
+
+
 
     @PostMapping("/login")
     public ResponseEntity<UserLoginResponse> login(@Valid @RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request, HttpServletResponse response) {
@@ -92,18 +111,26 @@ public class UserController {
         if (userResponse != null) {
             System.out.println("User found");
 
-            // Invalidate the old session if exists
-            HttpSession oldSession = request.getSession(false);
-            if (oldSession != null) {
-                oldSession.invalidate();
-            }
 
-            // Create a new session
-            HttpSession newSession = request.getSession(true);
-            System.out.println("Session ID when created: " + newSession.getId());
-            newSession.setAttribute("userId", userResponse.getTempUserId());
+            // Generate a strong random session ID
+            String sessionId = UUID.randomUUID().toString();
 
-            Cookie sessionCookie = new Cookie("JSESSIONID", newSession.getId());
+            // Create a new Session object
+            Session newSession = new Session();
+            newSession.setSessionId(sessionId);
+            newSession.setCreationTime(new Date());
+            newSession.setExpiryTime(new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000)); // 1 day later
+            newSession.setUser(userResponse.getUser());
+
+
+            // Save the Session object to the database
+            // Assuming you have a SessionService with a saveSession method
+            sessionService.saveSession(newSession);
+
+
+
+
+            Cookie sessionCookie = new Cookie("JSESSIONID", sessionId );
             userResponse.setTempUserId(null);
             sessionCookie.setMaxAge(24 * 60 * 60); // 1 day
             sessionCookie.setHttpOnly(true);
@@ -120,6 +147,9 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(userResponse);
         }
     }
+
+
+
  /*   @GetMapping("/user-data")
     public ResponseEntity<User> getUserData(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
@@ -149,6 +179,7 @@ public class UserController {
     }*/
 
 
+
     @GetMapping("/user-data")
     public ResponseEntity<Map<String, Object>> getUserData(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
@@ -156,46 +187,64 @@ public class UserController {
             for (Cookie cookie : cookies) {
                 if (cookie.getName().equals("JSESSIONID")) {
                     System.out.println("JSESSIONID cookie value: " + cookie.getValue());
-                    HttpSession session = request.getSession(false);
-                    if (session != null) {
-                        System.out.println("Session ID when retrieved: " + session.getId());
-                        Long userId = (Long) session.getAttribute("userId");
-                        if (userId != null) {
-                            User user = userService.getUserById(userId);
-                            if (user != null) {
-                                Map<String, Object> response = new HashMap<>();
-                                response.put("user", user);
-                                if (user instanceof Organizer) {
-                                    response.put("role", "Organizer");
-                                }  else {
-                                    response.put("role", "User");
-                                }
-                                return ResponseEntity.ok(response);
+
+                    // Retrieve the Session object from the database using the session ID from the cookie
+                    Session session = sessionService.getSessionBySessionId(cookie.getValue());
+
+                    if (session != null && session.getExpiryTime().after(new Date())) {
+                        System.out.println("Session ID when retrieved: " + session.getSessionId());
+                        User user = session.getUser();
+                        if (user != null) {
+                            Map<String, Object> response = new HashMap<>();
+                            response.put("user", user);
+                            System.out.println("User found : " + user.getLogin());
+                            if (user instanceof Organizer) {
+                                response.put("role", "Organizer");
                             } else {
-                                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+                                response.put("role", "User");
                             }
+                            return ResponseEntity.ok(response);
+                        } else {
+                            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
                         }
                     } else {
-                        System.out.println("Session is null");
+                        System.out.println("Session is null or expired");
                     }
                 }
             }
         }
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(null);
     }
-
     @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.invalidate();
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals("JSESSIONID")) {
+                    System.out.println("JSESSIONID cookie value: " + cookie.getValue());
+
+                    // Retrieve the Session object from the database using the session ID from the cookie
+                    Session session = sessionService.getSessionBySessionId(cookie.getValue());
+
+                    if (session != null) {
+                        // Delete the Session object from the database
+                        sessionService.deleteSession(session);
+
+                        // Invalidate the JSESSIONID cookie
+                        Cookie sessionCookie = new Cookie("JSESSIONID", null);
+                        sessionCookie.setMaxAge(0);
+                        sessionCookie.setHttpOnly(true);
+                        sessionCookie.setSecure(true);
+                        sessionCookie.setPath("/");
+                        response.addCookie(sessionCookie);
+                        System.out.println("Logged out");
+                        return ResponseEntity.ok("Logged out");
+                    } else {
+                        System.out.println("Session is null");
+                    }
+                }
+            }
         }
-        Cookie sessionCookie = new Cookie("JSESSIONID", null);
-        sessionCookie.setMaxAge(0);
-        sessionCookie.setHttpOnly(true);
-        sessionCookie.setSecure(true);
-        sessionCookie.setPath("/");
-        response.addCookie(sessionCookie);
-        return ResponseEntity.ok("Logged out");
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body("User is not logged in");
     }
 }

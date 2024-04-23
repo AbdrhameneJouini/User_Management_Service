@@ -15,7 +15,7 @@ public class Token {
 
     private String value;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
 

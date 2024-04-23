@@ -1,8 +1,8 @@
 package com.gjevents.usermanagementservice.model;
 
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.Entity;
+
 
 @Entity
 public class User extends  UserBase{
@@ -13,6 +13,9 @@ public class User extends  UserBase{
 
 
         protected String accountState;
+
+
+
 
 
         public String getAccountState() {
@@ -36,10 +39,9 @@ public class User extends  UserBase{
         }
 
 
-
         public void setAddress(String address) {
-            this.address = address;
-        }
+                this.address = address;
+            }
 
 
     @Override
