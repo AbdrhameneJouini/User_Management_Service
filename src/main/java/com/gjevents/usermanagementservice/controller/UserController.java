@@ -145,38 +145,13 @@ public class UserController {
             userResponse = new UserLoginResponse();
             userResponse.setResponseState("Incorrect Login or Password");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(userResponse);
+
         }
     }
 
 
 
- /*   @GetMapping("/user-data")
-    public ResponseEntity<User> getUserData(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (cookie.getName().equals("JSESSIONID")) {
-                    System.out.println("JSESSIONID cookie value: " + cookie.getValue());
-                    HttpSession session = request.getSession(false);
-                    if (session != null) {
-                        System.out.println("Session ID when retrieved: " + session.getId());
-                        Long userId = (Long) session.getAttribute("userId");
-                        if (userId != null) {
-                            User user = userService.getUserById(userId);
-                            if (user != null) {
-                                return ResponseEntity.ok(user);
-                            } else {
-                                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-                            }
-                        }
-                    } else {
-                        System.out.println("Session is null");
-                    }
-                }
-            }
-        }
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(null);
-    }*/
+
 
 
 
