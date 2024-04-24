@@ -1,10 +1,11 @@
 package com.gjevents.usermanagementservice.model;
 
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.Entity;
 
+
 import java.util.Date;
+
 
 @Entity
 public class User extends  UserBase {
@@ -29,7 +30,13 @@ public class User extends  UserBase {
         this.firstName = firstName;
         this.lastName = lastName;
 
+
     }
+
+
+
+
+   
 
     public String getAccountState() {
         return accountState;
@@ -52,9 +59,11 @@ public class User extends  UserBase {
     }
 
 
+
     public void setAddress(String address) {
         this.address = address;
     }
+
 
 
     @Override

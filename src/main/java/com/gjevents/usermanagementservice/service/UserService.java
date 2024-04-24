@@ -17,13 +17,17 @@ import java.security.Key;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
 
 
     private final UserRepository userRepository;
+
+
     private final AdminRepository adminRepository;
     private final OrganizerRepository organizerRepository;
 
@@ -62,6 +66,7 @@ public class UserService {
     }
 
     public UserLoginResponse getUserLoginResponse(String login, String password) {
+        System.out.println("login: " + login + " password: " + password);
         boolean isSuccessful = login(login, password);
         if (isSuccessful) {
             User user = getUserData(login);
@@ -72,11 +77,13 @@ public class UserService {
             if (user != null) {
                 userResponse.setTempUserId(user.getId());
                 userResponse.setUserData(user.toString());
+                userResponse.setUser(user);
             } else {
                 Administrator admin = adminRepository.findAdministratorByEmail(login);
                 if (admin != null) {
                     userResponse.setTempUserId(admin.getId());
                     userResponse.setUserData(admin.toString());
+                    userResponse.setUser(null);
                 } else {
                     return null;
                 }
