@@ -222,4 +222,24 @@ public class UserController {
         }
         return ResponseEntity.status(HttpStatus.ACCEPTED).body("User is not logged in");
     }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser( @Valid @RequestBody UserSignupRequest userSignupRequest) {
+        boolean registrationStatus = userService.registerUser(userSignupRequest.getLogin(),userSignupRequest.getPassword(),userSignupRequest.getEmail(),userSignupRequest.getFirstName(),userSignupRequest.getLastName(),userSignupRequest.getPhoneNumber(),userSignupRequest.getAddress());
+        if(registrationStatus) {
+            return ResponseEntity.ok("signup success"); // Retourne l'utilisateur enregistré avec le statut 200 OK
+        } else {
+            return ResponseEntity.badRequest().body("Invalid informations"); // Retourne un statut 400 Bad Request en cas d'échec de l'inscription
+        }
+    }
+
+
+    @GetMapping("/verify")
+    public ResponseEntity<String> verifyEmail(@RequestParam("token") String token) {
+        if (userService.verifyEmail(token)) {
+            return ResponseEntity.ok("Votre email a été vérifié avec succès. Vous pouvez maintenant vous connecter.");
+        } else {
+            return ResponseEntity.badRequest().body("Le lien de vérification est invalide ou a expiré.");
+        }
+    }
 }

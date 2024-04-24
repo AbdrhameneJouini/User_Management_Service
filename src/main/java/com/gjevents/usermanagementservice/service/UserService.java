@@ -2,19 +2,19 @@ package com.gjevents.usermanagementservice.service;
 
 import com.gjevents.usermanagementservice.controller.PasswordResetRequest;
 import com.gjevents.usermanagementservice.controller.UserLoginResponse;
+import com.gjevents.usermanagementservice.controller.UserSignupRequest;
 import com.gjevents.usermanagementservice.model.*;
 import com.gjevents.usermanagementservice.repository.AdminRepository;
 import com.gjevents.usermanagementservice.repository.OrganizerRepository;
 import com.gjevents.usermanagementservice.repository.TokenRepository;
 import com.gjevents.usermanagementservice.repository.UserRepository;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -60,10 +60,6 @@ public class UserService {
         }
         return false;
     }
-
-
- 
-
 
     public User getUserData(String login) {
         return userRepository.findByEmail(login);
@@ -200,6 +196,95 @@ public class UserService {
         }
     }
 
+    @Autowired
+    private EmailService emailService;
+
+    public boolean registerUser(String login, String password, String email, String firstName, String lastName, String phoneNumber, String address) {
+        boolean userExists = userRepository.existsUserByEmail(email);
+        if (!userExists) {
+            String verificationToken = generateVerificationToken();
+            User user = new User(login, password, email, firstName, lastName, phoneNumber, address);
+            userRepository.save(user);
+            saveVerificationToken(user, verificationToken); // Save verification token
+            sendVerificationEmail(email, verificationToken); // Send verification email with token
+            return true;
+        }
+        return false;
+    }
+
+    private void sendVerificationEmail(String email, String token) {
+        String subject = "Email Verification";
+        String verificationLink = "http://localhost:8080/verify?token=" + token; // Change the URL accordingly
+        String body = "Please click the following link to verify your email address: " + verificationLink;
+        emailService.sendEmail(email, subject, body);
+    }
+
+    private String generateVerificationToken() {
+        // Generate a random verification token
+        return UUID.randomUUID().toString();
+    }
+
+    private void saveVerificationToken(User user, String token) {
+        Token verificationToken = new Token();
+        verificationToken.setValue(token);
+        verificationToken.setUser(user);
+        verificationToken.setTokenType("email_verification");
+        Date expiryDate = new Date(); // Créer une nouvelle date
+        // Ajouter 30 minutes à la date actuelle
+        expiryDate.setTime(expiryDate.getTime() + (30 * 60 * 1000));
+
+        // Utiliser la méthode setExpiryDate pour définir la date d'expiration sur la date calculée
+        verificationToken.setExpiryDate(expiryDate);
+
+        tokenRepository.save(verificationToken);
+    }
+
+
+    public boolean verifyEmail(String token) {
+        Token verificationToken = tokenRepository.findByValueAndTokenType(token, "email_verification");
+        if (verificationToken != null && !verificationToken.isExpired()) {
+            User user = verificationToken.getUser();
+            user.setEmailVerified(true);
+            userRepository.save(user);
+            tokenRepository.delete(verificationToken);
+            return true;
+        }
+        return false;
+    }
+
+    public void disableAccount(User user) {   // c'est la fonction qui va déasactiver le compte
+        user.setAccountState("DISABLED"); // lehne AccountState dans la classe user va prendre la valeur disabled
+        user.setDeactivationDate(new Date()); // Mettre à jour la date de désactivation
+        userRepository.save(user);
+    }
+
+    public void enableAccount(User user) {
+        user.setAccountState("ACTIVE");
+        user.setDeactivationDate(null); // Réinitialiser la date de désactivation
+        userRepository.save(user);
+    }
+
+    public boolean shouldDeleteAccount(User user) { //cette fonction pour vérifier q'un compte doit etre supprimer ou non
+        Date expirationDate = calculateExpirationDate(user);
+        return new Date().after(expirationDate);
+    }
+
+    private Date calculateExpirationDate(User user) { //si le compte était désactiver plus que 30jours
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(user.getDeactivationDate());
+        cal.add(Calendar.DAY_OF_MONTH, 30); // Ajoute 30 jours
+        return cal.getTime();
+    }
+
+    public void processAccountDeletion(User user) { //la supprission du compte apres vérification
+        if (shouldDeleteAccount(user)) {
+            deleteAccount(user);
+        }
+    }
+
+    public void deleteAccount(User user) {
+        userRepository.delete(user);
+    }
 
 
 }
