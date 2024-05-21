@@ -3,6 +3,8 @@ package com.gjevents.usermanagementservice.model;
 
 import jakarta.persistence.Entity;
 
+import java.util.Date;
+
 
 import java.util.Date;
 
@@ -24,14 +26,39 @@ public class User extends  UserBase {
 
     public User(String login, String password, String email, String firstName, String lastName, String phoneNumber, String address) {
 
-        this.login = login;
-        this.password = password;
-        this.email = email;
-        this.firstName = firstName;
-        this.lastName = lastName;
+
+        private Date deactivationDate;
 
 
+    private boolean emailVerified;
+
+    public User() {
     }
+
+
+    public User(String login, String password, String email, String firstName, String lastName, String phoneNumber, String address) {
+        super(login, password, email, firstName, lastName);
+        this.phoneNumber = phoneNumber;
+        this.address = address;
+    }
+
+
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
+    }
+
+
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
+
+
+
+    public String getAccountState() {
+            return accountState;
+        }
+
 
 
 
@@ -65,6 +92,13 @@ public class User extends  UserBase {
     }
 
 
+    public Date getDeactivationDate() {
+        return deactivationDate;
+    }
+
+    public void setDeactivationDate(Date deactivationDate) {
+        this.deactivationDate = deactivationDate;
+    }
 
     @Override
     public String toString() {
@@ -79,24 +113,8 @@ public class User extends  UserBase {
                 ", role='User'}";
     }
 
-    private boolean emailVerified;
 
 
 
-    public void setEmailVerified(boolean emailVerified) {
-        this.emailVerified = emailVerified;
-    }
 
-
-    public boolean isEmailVerified() {
-        return emailVerified;
-    }
-
-    public Date getDeactivationDate() {
-        return deactivationDate;
-    }
-
-    public void setDeactivationDate(Date deactivationDate) {
-        this.deactivationDate = deactivationDate;
-    }
 }

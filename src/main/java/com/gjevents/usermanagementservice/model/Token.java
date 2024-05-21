@@ -64,10 +64,11 @@ public class Token {
         this.expiryDate = expiryDate;
     }
 
+
+
     public boolean isExpired() {
-        // Récupérer la date actuelle
         Date currentDate = new Date();
-        // Vérifier si la date d'expiration est antérieure à la date actuelle
+
         return expiryDate != null && expiryDate.before(currentDate);
     }
 }

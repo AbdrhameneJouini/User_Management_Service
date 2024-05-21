@@ -35,6 +35,10 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final MailSenderService mailSenderService;
 
+    @Autowired
+    private EmailService emailService;
+
+
 
     @Autowired
     public UserService(UserRepository userRepository,MailSenderService mailSenderService,OrganizerRepository organizerRepository ,AdminRepository adminRepository, PasswordEncoder passwordEncoder, TokenRepository tokenRepository) {
@@ -285,6 +289,115 @@ public class UserService {
     public void deleteAccount(User user) {
         userRepository.delete(user);
     }
+
+
+
+
+    public boolean registerUser(String login, String password, String email, String firstName, String lastName, String phoneNumber, String address, String accountType) {
+        boolean userExists = userRepository.existsUserByEmail(email);
+        if (!userExists) {
+            String verificationToken = generateVerificationToken();
+            System.out.println("accountType: " + accountType);
+            if (accountType.equals("organizer")) {
+                Organizer organizer = new Organizer(login, passwordEncoder.encode(password), email, firstName, lastName, phoneNumber, address);
+                organizer.setAccountState("PENDING");
+                organizerRepository.save(organizer);
+                saveVerificationToken(organizer, verificationToken);
+                sendVerificationEmail(email, verificationToken);
+                return true;
+            }
+            else{
+                User user = new User(login, passwordEncoder.encode(password), email, firstName, lastName, phoneNumber, address);
+                user.setAccountState("PENDING");
+                userRepository.save(user);
+                saveVerificationToken(user, verificationToken);
+                sendVerificationEmail(email, verificationToken);
+                return true;
+            }
+
+
+
+
+        }
+        return false;
+    }
+
+    private void sendVerificationEmail(String email, String token) {
+        String subject = "Email Verification";
+        String verificationLink = "http://localhost:8080/users/verify?token=" + token; // Change the URL accordingly
+        String body = "Please click the following link to verify your email address: " + verificationLink;
+        emailService.sendEmail(email, subject, body);
+    }
+
+    private String generateVerificationToken() {
+        // Generate a random verification token
+        return UUID.randomUUID().toString();
+    }
+
+    private void saveVerificationToken(User user, String token) {
+        Token verificationToken = new Token();
+        verificationToken.setValue(token);
+        verificationToken.setUser(user);
+        verificationToken.setTokenType("email_verification");
+        Date expiryDate = new Date(); // Créer une nouvelle date
+        // Ajouter 30 minutes à la date actuelle
+        expiryDate.setTime(expiryDate.getTime() + (30 * 60 * 1000));
+
+        // Utiliser la méthode setExpiryDate pour définir la date d'expiration sur la date calculée
+        verificationToken.setExpiryDate(expiryDate);
+
+        tokenRepository.save(verificationToken);
+    }
+
+
+    public boolean verifyEmail(String token) {
+        Token verificationToken = tokenRepository.findByValueAndTokenType(token, "email_verification");
+        if (verificationToken != null && !verificationToken.isExpired()) {
+            User user = verificationToken.getUser();
+            user.setEmailVerified(true);
+            user.setAccountState("ACTIVATED");
+            userRepository.save(user);
+            tokenRepository.delete(verificationToken);
+            return true;
+        }
+        return false;
+    }
+
+    public void disableAccount(User user) {
+        user.setAccountState("DISABLED");
+        user.setDeactivationDate(new Date());
+        userRepository.save(user);
+    }
+
+    public void enableAccount(User user) {
+        user.setAccountState("ACTIVE");
+        user.setDeactivationDate(null);
+        userRepository.save(user);
+    }
+
+    public boolean shouldDeleteAccount(User user) {
+        Date expirationDate = calculateExpirationDate(user);
+        return new Date().after(expirationDate);
+    }
+
+    private Date calculateExpirationDate(User user) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(user.getDeactivationDate());
+        cal.add(Calendar.DAY_OF_MONTH, 30);
+        return cal.getTime();
+    }
+
+    public void processAccountDeletion(User user) { //la supprission du compte apres vérification
+        if (shouldDeleteAccount(user)) {
+            deleteAccount(user);
+        }
+    }
+
+    public void deleteAccount(User user) {
+        userRepository.delete(user);
+    }
+
+
 
 
 }

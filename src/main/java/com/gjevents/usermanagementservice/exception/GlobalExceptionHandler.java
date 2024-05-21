@@ -97,4 +97,6 @@ public class GlobalExceptionHandler {
         logger.error("An error occurred", ex);
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+
 }

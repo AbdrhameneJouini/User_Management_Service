@@ -19,6 +19,18 @@ public class UserSignupRequest {
     String phoneNumber;
     String address;
 
+
+    String accountType ;
+
+    public String getAccountType() {
+        return accountType;
+    }
+
+    public void setAccountType(String accountType) {
+        this.accountType = accountType;
+    }
+
+
     public String getLogin() {
         return login;
     }
@@ -76,4 +88,6 @@ public class UserSignupRequest {
     }
 
 
+
 }
+

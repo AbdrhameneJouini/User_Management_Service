@@ -1,9 +1,7 @@
 package com.gjevents.usermanagementservice.model;
 
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
 @MappedSuperclass
@@ -11,7 +9,8 @@ public abstract class UserBase {
 
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_seq")
+    @SequenceGenerator(name = "user_seq", sequenceName = "user_seq", allocationSize = 1)
     protected Long id;
 
 
@@ -28,6 +27,18 @@ public abstract class UserBase {
     protected String firstName;
     @NotNull
     protected String lastName;
+
+
+    public UserBase() {
+    }
+
+    public UserBase(String login, String password, String email, String firstName, String lastName) {
+        this.login = login;
+        this.password = password;
+        this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
 
 
     public void setId(Long id) {
