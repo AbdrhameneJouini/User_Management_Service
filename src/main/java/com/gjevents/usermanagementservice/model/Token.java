@@ -65,8 +65,10 @@ public class Token {
     }
 
 
+
     public boolean isExpired() {
         Date currentDate = new Date();
+
         return expiryDate != null && expiryDate.before(currentDate);
     }
 }
