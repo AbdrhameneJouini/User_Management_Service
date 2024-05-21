@@ -22,10 +22,7 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.web.bind.annotation.*;
 
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("/users")
@@ -112,6 +109,17 @@ public class UserController {
             System.out.println("User found");
 
 
+            if (Objects.equals(userResponse.getUser().getAccountState(), "DESCATIVATED")) {
+                userResponse.setResponseState("Account is not desactivated");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(userResponse);
+            }
+
+            if (Objects.equals(userResponse.getUser().getAccountState(), "PENDING")) {
+                userResponse.setResponseState("Account is not verified");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(userResponse);
+            }
+
+
             // Generate a strong random session ID
             String sessionId = UUID.randomUUID().toString();
 
@@ -138,13 +146,13 @@ public class UserController {
             sessionCookie.setPath("/");
             response.addCookie(sessionCookie);
 
-            userResponse.setResponseState("success");
+                    userResponse.setResponseState("Login Success");
             return ResponseEntity.ok(userResponse);
         } else {
             System.out.println("User not found");
             userResponse = new UserLoginResponse();
             userResponse.setResponseState("Incorrect Login or Password");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(userResponse);
+            return ResponseEntity.status(HttpStatus.OK).body(userResponse);
 
         }
     }
@@ -221,5 +229,29 @@ public class UserController {
             }
         }
         return ResponseEntity.status(HttpStatus.ACCEPTED).body("User is not logged in");
+    }
+
+
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser( @RequestBody UserSignupRequest userSignupRequest) {
+        System.out.println("in register " + userSignupRequest.getLogin());
+
+        boolean registrationStatus = userService.registerUser(userSignupRequest.getLogin(),userSignupRequest.getPassword(),userSignupRequest.getEmail(),userSignupRequest.getFirstName(),userSignupRequest.getLastName(),userSignupRequest.getPhoneNumber(),userSignupRequest.getAddress(), userSignupRequest.getAccountType());
+        if(registrationStatus) {
+            return ResponseEntity.ok("signup success");
+        } else {
+            return ResponseEntity.badRequest().body("Invalid informations");
+        }
+    }
+
+
+    @GetMapping("/verify")
+    public ResponseEntity<String> verifyEmail(@RequestParam("token") String token) {
+        System.out.println("in verife");
+        if (userService.verifyEmail(token)) {
+            return ResponseEntity.ok("Votre email a été vérifié avec succès. Vous pouvez maintenant vous connecter.");
+        } else {
+            return ResponseEntity.badRequest().body("Le lien de vérification est invalide ou a expiré.");
+        }
     }
 }
