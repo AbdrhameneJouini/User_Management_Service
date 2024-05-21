@@ -6,16 +6,25 @@ import jakarta.persistence.Entity;
 import java.util.Date;
 
 
+import java.util.Date;
+
+
 @Entity
-public class User extends  UserBase{
+public class User extends  UserBase {
+    private Date deactivationDate;
+    protected String phoneNumber;
 
-        protected String phoneNumber;
-
-        protected String address;
+    protected String address;
 
 
-        protected String accountState;
+    protected String accountState;
 
+
+    public User() {
+
+    }
+
+    public User(String login, String password, String email, String firstName, String lastName, String phoneNumber, String address) {
 
 
         private Date deactivationDate;
@@ -50,26 +59,38 @@ public class User extends  UserBase{
             return accountState;
         }
 
-        public void setAccountState(String accountState) {
-            this.accountState = accountState;
-        }
-
-        public String getPhoneNumber() {
-                return phoneNumber;
-        }
-
-        public void setPhoneNumber(String phoneNumber) {
-            this.phoneNumber = phoneNumber;
-        }
-
-        public String getAddress() {
-            return address;
-        }
 
 
-        public void setAddress(String address) {
-                this.address = address;
-            }
+
+
+   
+
+    public String getAccountState() {
+        return accountState;
+    }
+
+    public void setAccountState(String accountState) {
+        this.accountState = accountState;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
 
     public Date getDeactivationDate() {
         return deactivationDate;
@@ -91,6 +112,8 @@ public class User extends  UserBase{
                 ", lastName='" + lastName + '\'' +
                 ", role='User'}";
     }
+
+
 
 
 

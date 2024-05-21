@@ -232,6 +232,7 @@ public class UserController {
     }
 
 
+
     @PostMapping("/register")
     public ResponseEntity<?> registerUser( @RequestBody UserSignupRequest userSignupRequest) {
         System.out.println("in register " + userSignupRequest.getLogin());
@@ -241,17 +242,22 @@ public class UserController {
             return ResponseEntity.ok("signup success");
         } else {
             return ResponseEntity.badRequest().body("Invalid informations");
+
         }
     }
 
 
     @GetMapping("/verify")
     public ResponseEntity<String> verifyEmail(@RequestParam("token") String token) {
+
         System.out.println("in verife");
+
         if (userService.verifyEmail(token)) {
             return ResponseEntity.ok("Votre email a été vérifié avec succès. Vous pouvez maintenant vous connecter.");
         } else {
             return ResponseEntity.badRequest().body("Le lien de vérification est invalide ou a expiré.");
         }
     }
+
 }
+
