@@ -1,40 +1,18 @@
 package com.gjevents.usermanagementservice.model;
 
-
 import jakarta.persistence.Entity;
-
 import java.util.Date;
-
-
-import java.util.Date;
-
 
 @Entity
-public class User extends  UserBase {
+public class User extends UserBase {
     private Date deactivationDate;
     protected String phoneNumber;
-
     protected String address;
-
-
     protected String accountState;
-
-
-    public User() {
-
-    }
-
-    public User(String login, String password, String email, String firstName, String lastName, String phoneNumber, String address) {
-
-
-        private Date deactivationDate;
-
-
     private boolean emailVerified;
 
     public User() {
     }
-
 
     public User(String login, String password, String email, String firstName, String lastName, String phoneNumber, String address) {
         super(login, password, email, firstName, lastName);
@@ -42,28 +20,13 @@ public class User extends  UserBase {
         this.address = address;
     }
 
-
     public void setEmailVerified(boolean emailVerified) {
         this.emailVerified = emailVerified;
     }
 
-
     public boolean isEmailVerified() {
         return emailVerified;
     }
-
-
-
-
-    public String getAccountState() {
-            return accountState;
-        }
-
-
-
-
-
-   
 
     public String getAccountState() {
         return accountState;
@@ -85,12 +48,9 @@ public class User extends  UserBase {
         return address;
     }
 
-
-
     public void setAddress(String address) {
         this.address = address;
     }
-
 
     public Date getDeactivationDate() {
         return deactivationDate;
@@ -112,9 +72,4 @@ public class User extends  UserBase {
                 ", lastName='" + lastName + '\'' +
                 ", role='User'}";
     }
-
-
-
-
-
 }
